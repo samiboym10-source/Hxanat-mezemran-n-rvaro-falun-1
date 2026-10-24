@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Närvaro Falun</title>
+<style>
+:root{--bg:#f1f4f9;--sf:#fff;--ink:#15233d;--mut:#5b6879;--ln:#d5dce8;--ac:#274b8f;--acf:#fff;--rd:#a82a3d;--gold:#b8862b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1624;--sf:#172033;--ink:#e8edf6;--mut:#9aa7bb;--ln:#2a3550;--ac:#8fb4f5;--acf:#0b1220;--rd:#ec8aa0;--gold:#e0b45c}}
+:root[data-theme="dark"]{--bg:#0f1624;--sf:#172033;--ink:#e8edf6;--mut:#9aa7bb;--ln:#2a3550;--ac:#8fb4f5;--acf:#0b1220;--rd:#ec8aa0;--gold:#e0b45c}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:720px;margin:0 auto;padding:18px 16px 60px}
+h1{font:600 28px/1.1 Georgia,serif;margin:6px 0 14px}
+h3{margin:0 0 6px;font-size:17px}
+.pan{background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:14px;margin:12px 0}
+.sub{color:var(--mut);font-size:14px}.err{color:var(--rd);font-size:14px;margin-top:6px}
+.note{background:var(--sf);border:1px dashed var(--gold);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:10px}
+input[type=text],input[type=tel],input[type=date],input[type=password],select{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.add{display:flex;gap:8px;margin-top:10px}
+.btn{border:0;background:var(--ac);color:var(--acf);font:inherit;font-weight:600;padding:10px 16px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block;white-space:nowrap}
+.btn.g{background:transparent;color:var(--ink);border:1px solid var(--ln)}
+.chip{border:1px solid var(--ln);background:var(--sf);color:var(--ink);padding:7px 13px;border-radius:99px;font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--ln)}.li:last-child{border:0}
+.li>span{flex:1}.li input[type=checkbox]{width:24px;height:24px;accent-color:var(--ac);flex:none}
+.li input[type=text]{flex:1}.li select{width:auto;max-width:42%}
+.x{border:0;background:none;color:var(--mut);font-size:22px;line-height:1;cursor:pointer;padding:2px 8px}
+.mk{width:46px;height:46px;border-radius:12px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);font:700 20px system-ui,sans-serif;cursor:pointer;flex:none}
+.mk.x{background:var(--ac);color:var(--acf);border-color:var(--ac)}.mk.a{background:var(--rd);color:var(--acf);border-color:var(--rd)}.mk.hint{color:var(--rd);border:2px dashed var(--rd)}
+.ti{color:var(--mut);font-size:.92em;font-weight:400}.btn .ti{color:inherit;opacity:.85}
+.seg{flex:1;min-height:52px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);border-radius:12px;font:600 15px/1.25 system-ui,sans-serif;cursor:pointer;padding:6px 8px}
+.seg.go{background:var(--ac);color:var(--acf);border-color:var(--ac)}.seg.no{background:var(--rd);color:var(--acf);border-color:var(--rd)}.seg .ti{color:inherit;opacity:.85}.tg.ok{color:var(--ac)}
+.seg.am{background:var(--gold);color:#16281f;border-color:var(--gold)}.seg.soft{opacity:.8;border-style:dashed}.sg{font:800 20px system-ui,sans-serif}
+.dh{font-weight:600;margin:14px 0 2px;text-transform:capitalize}
+.tg{color:var(--rd);font-size:13px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="w" id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ===== INSTÄLLNINGAR ===== */
+// 1) Klistra in din firebaseConfig här (från Firebase > Projektinställningar > Dina appar > Webbapp).
+//    Lämnas apiKey tomt körs appen i testläge och sparar bara på den här enheten.
+var FB={apiKey:'AIzaSyBsd0LHeU2CKCqw1RGaXLuxk1HbU6hZPx8',authDomain:'falun-mezmuer-hxanat.firebaseapp.com',projectId:'falun-mezmuer-hxanat',storageBucket:'falun-mezmuer-hxanat.firebasestorage.app',messagingSenderId:'404269157555',appId:'1:404269157555:web:e1d251703e8cdcdf20b4c6'};
+// 2) Admin-nummer som alltid gäller, t.ex. ['0701234567']. Fler admins läggs till i appen.
+var ADMINS=['0736512835'];
+var ADMIN_NAMES={'0736512835':'Selina Gebrehiwet'};
+var ADMIN_PW='kidusmikael12'; // lösenord för admin (kan ändras i appen under Inställningar)
+/* ========================= */
+
+var WD=['söndag','måndag','tisdag','onsdag','torsdag','fredag','lördag'],MON=['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+var S={cfg:{name:'Närvaro Falun',groups:[],days:[6,0],start:'',end:'',report:'',admins:[]},fam:{},abs:{}};
+var ME=localStorage.getItem('np_me')||'',TAB='n',DSEL='',GSEL='',SHOW=8,FQ='',REG=[''],RPH='',CLOUD=false,fs=null;
+var TW=['ሰንበት','ሰኑይ','ሰሉስ','ረቡዕ','ሓሙስ','ዓርቢ','ቀዳም'];
+function B(sv,ti,blk){return esc(sv)+(blk?'<br>':' ')+'<span class="ti">'+ti+'</span>'}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function norm(p){p=String(p||'').replace(/\D/g,'');if(p.indexOf('0046')===0)p='0'+p.slice(4);else if(p.indexOf('46')===0&&p.length>9)p='0'+p.slice(2);return p}
+function wnum(p){p=norm(p);return p.charAt(0)==='0'?'46'+p.slice(1):p}
+function isAdmin(p){return p==='#admin'||ADMINS.indexOf(p)>-1||S.cfg.admins.indexOf(p)>-1}
+function aname(p){if(p==='#admin')return'Admin';return ADMIN_NAMES[p]||(S.cfg.an&&S.cfg.an[p])||''}
+function setMe(p){ME=p;try{if(p)localStorage.setItem('np_me',p);else localStorage.removeItem('np_me')}catch(e){}}
+
+try{if(window.firebase&&FB.apiKey&&FB.projectId){firebase.initializeApp(FB);fs=firebase.firestore();CLOUD=true}}catch(e){}
+if(CLOUD){
+  fs.collection('np_cfg').doc('main').onSnapshot(function(d){if(d.exists)S.cfg=Object.assign({name:'Närvaro Falun',groups:[],days:[6,0],start:'',end:'',report:'',admins:[]},d.data());draw(true)});
+  fs.collection('np_fam').onSnapshot(function(s){S.fam={};s.forEach(function(d){S.fam[d.id]=d.data()});draw(true)});
+  fs.collection('np_abs').onSnapshot(function(s){S.abs={};s.forEach(function(d){S.abs[d.id]=d.data()});draw(true)});
+}else{try{var x=JSON.parse(localStorage.getItem('np_local'));if(x)S=x}catch(e){}}
+function lsave(){if(!CLOUD)try{localStorage.setItem('np_local',JSON.stringify(S))}catch(e){}}
+function wcfg(){if(CLOUD)fs.collection('np_cfg').doc('main').set(S.cfg);lsave();draw()}
+function wfam(p){if(CLOUD)fs.collection('np_fam').doc(p).set(S.fam[p]);lsave();draw()}
+function dfam(p){delete S.fam[p];if(CLOUD)fs.collection('np_fam').doc(p).delete();lsave();draw()}
+function wabs(id,o){S.abs[id]=o;if(CLOUD)fs.collection('np_abs').doc(id).set(o);lsave();draw()}
+function dabs(id){delete S.abs[id];if(CLOUD)fs.collection('np_abs').doc(id).delete();lsave();draw()}
+
+function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function mdays(back){
+  var c=S.cfg,t=new Date();t.setHours(12,0,0,0);t.setDate(t.getDate()-(back||0));
+  var s=c.start?new Date(c.start+'T12:00:00'):t;if(s<t)s=t;
+  var e=c.end?new Date(c.end+'T12:00:00'):new Date(t.getTime()+400*864e5),r=[];
+  for(var d=new Date(s),n=0;d<=e&&n<600;d.setDate(d.getDate()+1),n++)if(c.days.indexOf(d.getDay())>-1)r.push(iso(d));
+  return r;
+}
+function dlabel(s){var d=new Date(s+'T12:00:00');return WD[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]}
+function gname(id){var g=S.cfg.groups.filter(function(x){return x.id===id})[0];return g?g.n:''}
+function gopts(sel,all){return(all?'<option value="">'+all+'</option>':'')+S.cfg.groups.map(function(g){return'<option value="'+g.id+'"'+(g.id===sel?' selected':'')+'>'+esc(g.n)+'</option>'}).join('')}
+function ask(msg,ok){var d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99';
+  d.innerHTML='<div class="pan" style="max-width:380px;width:100%;margin:0"><p style="margin:0 0 14px;font-size:17px">'+esc(msg)+'</p><div class="add" style="margin:0"><button class="btn" id="ay" style="background:#a82a3d;color:#fff">Ta bort / ሰርዝ</button><button class="btn g" id="an">Avbryt / ኣቋርጽ</button></div></div>';
+  document.body.appendChild(d);d.querySelector('#ay').onclick=function(){d.remove();ok()};d.querySelector('#an').onclick=function(){d.remove()}}
+
+function draw(soft){
+  if(soft&&document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
+  var h='<h1>'+esc(S.cfg.name)+'</h1>';
+  if(!CLOUD)h+='<div class="note">Testläge: allt sparas bara på den här enheten. Koppla in Firebase (se överst i filen) för att föräldrar ska kunna registrera sig från sina egna telefoner.</div>';
+  if(ME&&!isAdmin(ME)&&!S.fam[ME])setMe('');
+  h+=!ME?start():isAdmin(ME)?admin():parent();
+  $('app').innerHTML=h;
+}
+var LT='t',REGMODE=/[?&]registrera/.test(location.search);
+function start(){
+  if(REGMODE)return regPage();
+  var t=LT==='t';
+  return'<div class="row"><button class="chip'+(t?' on':'')+'" onclick="LT=\'t\';draw()">'+B('Telefon','ተሌፎን')+'</button><button class="chip'+(t?'':' on')+'" onclick="LT=\'a\';draw()">Admin</button></div><div class="pan">'+
+  (t?'<h3>'+B('Logga in med telefonnummer','ብቁጽሪ ተሌፎን እቶ')+'</h3><div class="add" style="margin:0"><input type="tel" id="lp" placeholder="Telefonnummer / ቁጽሪ ተሌፎን" onkeydown="if(event.key===\'Enter\')login()"><button class="btn" onclick="login()">'+B('Logga in','እቶ')+'</button></div>'
+   :'<h3>Admin</h3><div class="add" style="margin:0"><input type="password" id="lp" placeholder="Lösenord eller telefonnummer" onkeydown="if(event.key===\'Enter\')loginPw()"><button class="btn" onclick="loginPw()">Logga in</button></div>')+'<div class="err" id="le"></div></div>';
+}
+function regPage(){
+  return'<div class="pan"><h3>'+B('Registrera dig som förälder','ከም ወላዲ ተመዝገብ')+'</h3><div class="sub">'+B('Skriv barnets namn. Tryck på plus om du har fler barn. Skriv sedan ditt telefonnummer.','ሽም ቆልዓ ጽሓፍ። ልዕሊ ሓደ ቆልዓ እንተልዩካ + ጠውቕ። ድሕሪኡ ቁጽሪ ተሌፎንካ ጽሓፍ።',1)+'</div>'+
+  REG.map(function(n,i){return'<input type="text" value="'+esc(n)+'" placeholder="Barnets namn / ሽም ቆልዓ" oninput="REG['+i+']=this.value" style="margin-top:8px">'}).join('')+
+  '<div class="row"><button class="chip" onclick="REG.push(\'\');draw()">+ '+B('Fler barn','ካልእ ቆልዓ')+'</button></div><input type="tel" value="'+esc(RPH)+'" placeholder="Ditt telefonnummer / ቁጽሪ ተሌፎንካ" oninput="RPH=this.value"><div class="add"><button class="btn" onclick="register()">'+B('Registrera','ተመዝገብ')+'</button></div><div class="err" id="re"></div></div>';
+}
+function loginPw(){var v=$('lp').value.trim(),pw=S.cfg.pw||ADMIN_PW;
+  if(v===pw){setMe('#admin');draw();return}
+  var n=norm(v);if(n&&isAdmin(n)){setMe(n);draw();return}
+  $('le').textContent='Fel lösenord eller nummer.'}
+function firstAdmin(){var p=norm($('fa').value);if(p.length<6)return;S.cfg.admins=[p];setMe(p);wcfg()}
+function login(){var p=norm($('lp').value);if(isAdmin(p)||S.fam[p]){setMe(p);draw()}else $('le').textContent='Numret finns inte. Be ledaren om registreringslänken. / እቲ ቁጽሪ የለን። ሊንክ ምዝገባ ካብ መራሒ ሕተት።'}
+function register(){
+  var p=norm(RPH),k=REG.map(function(s){return s.trim()}).filter(Boolean),e=$('re');
+  if(!k.length){e.textContent='Skriv minst ett barns namn. / እንተወሓደ ሽም ሓደ ቆልዓ ጽሓፍ።';return}
+  if(p.length<6){e.textContent='Skriv ditt telefonnummer. / ቁጽሪ ተሌፎንካ ጽሓፍ።';return}
+  if(S.fam[p]){e.textContent='Numret är redan registrerat. Logga in istället. / እቲ ቁጽሪ ተመዝጊቡ ኣሎ። ኣብ ክንዲኡ እቶ።';return}
+  S.fam[p]={phone:p,kids:k.map(function(n){return{id:uid(),n:n,g:''}})};REG=[''];RPH='';REGMODE=false;try{history.replaceState(null,'',location.pathname)}catch(e){}setMe(p);wfam(p);
+}
+function logout(){setMe('');draw()}
+
+function parent(){
+  var f=S.fam[ME],ds=mdays(0),show=ds.slice(0,SHOW),
+  h='<div class="pan"><button class="btn g" style="float:right" onclick="logout()">'+B('Logga ut','ወጻእ')+'</button><b>'+B('Inloggad','ኣትዩ')+'</b><div class="sub">'+esc(ME)+'</div></div>'+
+  '<div class="pan"><h3>'+B('Mina barn','ደቀይ')+'</h3>'+f.kids.map(function(k,i){return'<div class="li"><span>'+esc(k.n)+'</span><button class="x" data-i="'+i+'" onclick="rmKid(this.dataset.i)" aria-label="Ta bort barn">×</button></div>'}).join('')+
+  '<div class="add"><input type="text" id="nk" placeholder="Lägg till barn / ቆልዓ ወስኽ" onkeydown="if(event.key===\'Enter\')addKid()"><button class="btn" onclick="addKid()">'+B('Lägg till','ወስኽ')+'</button></div></div>'+
+  '<div class="pan"><h3>'+B('Anmäl frånvaro','ዘይምምጻእ ሓብር')+'</h3><div class="sub">'+B('Kryssa i de dagar barnet inte kommer. Det sparas direkt.','ቆልዓ ዘይመጽኣሉ መዓልትታት ምልክት ግበር። ብቐጥታ ይዕቀብ።',1)+'</div>';
+  if(!ds.length)h+='<div class="sub" style="margin-top:8px">'+B('Inga datum är inställda än.','ዕለታት ገና ኣይተወሰኑን።')+'</div>';
+  show.forEach(function(d){h+='<div class="dh">'+dlabel(d)+' <span class="ti">'+TW[new Date(d+'T12:00:00').getDay()]+'</span></div>';f.kids.forEach(function(k){h+='<label class="li"><input type="checkbox" '+(S.abs['a_'+d+'_'+k.id]?'checked':'')+' data-d="'+d+'" data-k="'+k.id+'" data-t="a" onchange="tgl(this)"><span>'+esc(k.n)+'</span></label>'})});
+  if(ds.length>SHOW)h+='<div class="row"><button class="chip" onclick="SHOW+=8;draw()">'+B('Visa fler datum','ካልኦት ዕለታት ርአ')+'</button></div>';
+  h+='</div>';
+  if(S.cfg.report){
+    var L=[];show.forEach(function(d){var n=f.kids.filter(function(k){return S.abs['a_'+d+'_'+k.id]}).map(function(k){return k.n});if(n.length)L.push(dlabel(d)+': '+n.join(', '))});
+    h+='<div class="pan"><a class="btn" target="_blank" rel="noopener" href="https://wa.me/'+wnum(S.cfg.report)+'?text='+encodeURIComponent('Frånvaro från '+ME+':\n'+(L.join('\n')||'Ingen frånvaro anmäld'))+'">'+B('Skicka även via WhatsApp','ብዋትሳፕ እውን ስደድ')+'</a></div>';
+  }
+  return h;
+}
+function addKid(){var v=$('nk').value.trim();if(!v)return;S.fam[ME].kids.push({id:uid(),n:v,g:''});wfam(ME)}
+function rmKid(i){var f=S.fam[ME];if(f.kids.length<2)return;ask('Ta bort '+f.kids[i].n+'?',function(){f.kids.splice(i,1);wfam(ME)})}
+function tgl(el){var id=el.dataset.t+'_'+el.dataset.d+'_'+el.dataset.k;if(el.checked)wabs(id,{kind:el.dataset.t,date:el.dataset.d,kid:el.dataset.k,by:ME});else dabs(id)}
+
+function admin(){
+  var T=[['n','Närvaro'],['g','Grupper'],['f','Föräldrar'],['s','Inställningar']];
+  return'<div class="sub">Inloggad som '+esc(aname(ME)||ME)+(ADMINS.indexOf(ME)>-1?' · högsta admin':'')+'</div><div class="row">'+T.map(function(t){return'<button class="chip'+(TAB===t[0]?' on':'')+'" data-t="'+t[0]+'" onclick="TAB=this.dataset.t;draw()">'+t[1]+'</button>'}).join('')+'<button class="chip" onclick="logout()">Logga ut</button></div>'+({n:tabN,g:tabG,f:tabF,s:tabS}[TAB])();
+}
+function allKids(){var r=[];Object.keys(S.fam).forEach(function(p){S.fam[p].kids.forEach(function(k){r.push({k:k,p:p})})});return r.sort(function(a,b){return a.k.n.localeCompare(b.k.n,'sv')})}
+function tabN(){
+  var ds=mdays(28),td=iso(new Date());
+  if(!DSEL||ds.indexOf(DSEL)<0)DSEL=ds.filter(function(d){return d>=td})[0]||ds[0]||'';
+  var ks=allKids().filter(function(o){return GSEL===''||(GSEL==='-'?!gname(o.k.g):o.k.g===GSEL)}),pr=0,ab=0,fr=0;
+  var h='<div class="pan"><div class="add" style="margin:0"><select onchange="DSEL=this.value;draw()">'+ds.map(function(d){return'<option value="'+d+'"'+(d===DSEL?' selected':'')+'>'+dlabel(d)+'</option>'}).join('')+'</select><select onchange="GSEL=this.value;draw()">'+gopts(GSEL,'Alla grupper').replace('</select>','')+'<option value="-"'+(GSEL==='-'?' selected':'')+'>Utan grupp</option></select></div>';
+  if(!ds.length)h+='<div class="sub" style="margin-top:8px">Välj veckodagar och datum under Inställningar.</div>';
+  var rows='';
+  ks.forEach(function(o){var a=S.abs['a_'+DSEL+'_'+o.k.id],m=S.abs['m_'+DSEL+'_'+o.k.id],st=m?m.st:'';
+    if(st==='x')pr++;else if(st==='f')fr++;else if(st==='a'||(!st&&a))ab++;
+    var at='data-d="'+DSEL+'" data-k="'+o.k.id+'"';
+    rows+='<div class="li" style="flex-wrap:wrap"><span style="flex:1 1 100%">'+esc(o.k.n)+'<div class="sub">'+esc(gname(o.k.g)||'Utan grupp')+' · '+esc(o.p)+'</div></span>'+
+    [['x','X','Närvaro','go'],['f','F','Frånvaro','no'],['a','A','Anmäld','am']].map(function(b){var on=st===b[0]||(!st&&b[0]==='a'&&a);return'<button class="seg '+(on?b[3]:'')+(on&&!st?' soft':'')+'" '+at+' data-s="'+b[0]+'" onclick="setP(this)"><span class="sg">'+b[1]+'</span><br>'+b[2]+'</button>'}).join('')+'</div>'});
+  h+=(ds.length?'<div class="sub" style="margin-top:10px">'+'<b>X</b> Närvaro '+pr+' · <b>F</b> Frånvaro '+fr+' · <b>A</b> Anmäld '+ab+' · Ej markerade '+(ks.length-pr-fr-ab)+'</div><div class="row"><button class="chip" onclick="markAll()">Markera övriga som närvaro</button></div>':'')+rows+(ks.length||!ds.length?'':'<div class="sub" style="margin-top:8px">Inga barn att visa.</div>')+'</div>';
+  return h;
+}
+function tabG(){
+  var h='<div class="pan"><h3>Grupper</h3><div class="sub">Lägg till så många grupper du vill och ge dem namn.</div>';
+  S.cfg.groups.forEach(function(g){var n=allKids().filter(function(o){return o.k.g===g.id}).length;
+    h+='<div class="li"><input type="text" value="'+esc(g.n)+'" data-g="'+g.id+'" onchange="renG(this)" aria-label="Gruppnamn"><span class="sub" style="flex:none">'+n+' barn</span><button class="x" data-g="'+g.id+'" onclick="delG(this.dataset.g)" aria-label="Ta bort grupp">×</button></div>'});
+  if(!S.cfg.groups.length)h+='<div class="sub" style="margin-top:8px">Inga grupper än.</div>';
+  return h+'<div class="add"><input type="text" id="ng" placeholder="Ny grupp, t.ex. Små, Mellan, Stora" onkeydown="if(event.key===\'Enter\')addG()"><button class="btn" onclick="addG()">Lägg till</button></div></div><div class="sub">Barnen läggs i grupper under Föräldrar.</div>';
+}
+function addG(){var v=$('ng').value.trim();if(!v)return;S.cfg.groups.push({id:uid(),n:v});wcfg()}
+function renG(el){S.cfg.groups.forEach(function(g){if(g.id===el.dataset.g&&el.value.trim())g.n=el.value.trim()});wcfg()}
+function delG(id){ask('Ta bort gruppen "'+gname(id)+'"? Barnen blir kvar men utan grupp.',function(){S.cfg.groups=S.cfg.groups.filter(function(g){return g.id!==id});Object.keys(S.fam).forEach(function(p){var ch=false;S.fam[p].kids.forEach(function(k){if(k.g===id){k.g='';ch=true}});if(ch&&CLOUD)fs.collection('np_fam').doc(p).set(S.fam[p])});wcfg()})}
+function tabF(){
+  var q=FQ.toLowerCase(),ps=Object.keys(S.fam).filter(function(p){return!q||p.indexOf(q)>-1||S.fam[p].kids.some(function(k){return k.n.toLowerCase().indexOf(q)>-1})}).sort();
+  var h=regBox()+'<div class="pan"><h3>Registrera förälder och barn</h3><div class="sub">Du kan lägga in föräldrar och barn själv. De behöver inte registrera sig.</div><div class="add" style="margin-top:0"><input type="tel" id="fp" placeholder="Förälderns nummer"><input type="text" id="fk" placeholder="Barnets namn"></div><div class="add"><button class="btn" onclick="addF()">Lägg till familj</button></div><div class="err" id="fe"></div></div>'+
+  '<input type="text" value="'+esc(FQ)+'" placeholder="Sök familj eller barn" onchange="FQ=this.value;draw()"><div class="sub" style="margin:6px 0">'+ps.length+' familjer, '+allKids().length+' barn</div>';
+  ps.forEach(function(p){
+    h+='<div class="pan"><div class="li" style="padding-top:0"><b style="flex:1">'+esc(p)+'</b><button class="x" data-p="'+p+'" onclick="delF(this.dataset.p)" aria-label="Ta bort familj">×</button></div>';
+    S.fam[p].kids.forEach(function(k){h+='<div class="li"><input type="text" value="'+esc(k.n)+'" data-p="'+p+'" data-k="'+k.id+'" onchange="renK(this)" aria-label="Namn"><select data-p="'+p+'" data-k="'+k.id+'" onchange="setG(this)" aria-label="Grupp">'+gopts(k.g,'Ingen grupp')+'</select><button class="x" data-p="'+p+'" data-k="'+k.id+'" onclick="delK(this)" aria-label="Ta bort barn">×</button></div>'});
+    h+='<div class="add"><input type="text" id="k_'+p+'" placeholder="Lägg till barn" data-p="'+p+'" onkeydown="if(event.key===\'Enter\')addK(this.dataset.p)"><button class="btn g" data-p="'+p+'" onclick="addK(this.dataset.p)">+ Barn</button></div></div>';
+  });
+  return h;
+}
+function addF(){var p=norm($('fp').value),n=$('fk').value.trim(),e=$('fe');if(p.length<6||!n){e.textContent='Skriv både nummer och barnets namn.';return}
+  if(S.fam[p]){S.fam[p].kids.push({id:uid(),n:n,g:''})}else S.fam[p]={phone:p,kids:[{id:uid(),n:n,g:''}]};wfam(p)}
+function delF(p){ask('Ta bort familjen '+p+' och alla deras barn?',function(){dfam(p)})}
+function addK(p){var v=$('k_'+p).value.trim();if(!v)return;S.fam[p].kids.push({id:uid(),n:v,g:''});wfam(p)}
+function renK(el){S.fam[el.dataset.p].kids.forEach(function(k){if(k.id===el.dataset.k&&el.value.trim())k.n=el.value.trim()});wfam(el.dataset.p)}
+function setG(el){S.fam[el.dataset.p].kids.forEach(function(k){if(k.id===el.dataset.k)k.g=el.value});wfam(el.dataset.p)}
+function delK(el){var p=el.dataset.p,f=S.fam[p],k=f.kids.filter(function(x){return x.id===el.dataset.k})[0];
+  ask('Ta bort '+k.n+'?',function(){f.kids=f.kids.filter(function(x){return x!==k});if(f.kids.length)wfam(p);else dfam(p)})}
+function tabS(){
+  var c=S.cfg,order=[1,2,3,4,5,6,0],h='<div class="pan"><h3>Namn på platsen</h3><input type="text" value="'+esc(c.name)+'" onchange="S.cfg.name=this.value.trim()||\'Närvaro\';wcfg()"></div>'+
+  '<div class="pan"><h3>Dagar</h3><div class="row">'+order.map(function(d){return'<label class="chip'+(c.days.indexOf(d)>-1?' on':'')+'"><input type="checkbox" style="display:none" '+(c.days.indexOf(d)>-1?'checked':'')+' data-d="'+d+'" onchange="togD(this)">'+WD[d].slice(0,3)+'</label>'}).join('')+'</div>'+
+  '<div class="add"><div style="flex:1"><div class="sub">Första datum</div><input type="date" value="'+esc(c.start)+'" onchange="S.cfg.start=this.value;wcfg()"></div><div style="flex:1"><div class="sub">Sista datum</div><input type="date" value="'+esc(c.end)+'" onchange="S.cfg.end=this.value;wcfg()"></div></div></div>'+
+  '<div class="pan"><h3>WhatsApp-nummer för rapporter</h3><div class="sub">Föräldrar kan skicka sin frånvaro hit.</div><input type="tel" value="'+esc(c.report)+'" placeholder="07..." onchange="S.cfg.report=this.value.trim();wcfg()" style="margin-top:8px"></div>'+
+  '<div class="pan"><h3>Lösenord för admin</h3><input type="text" value="'+esc(c.pw||ADMIN_PW)+'" onchange="S.cfg.pw=this.value.trim()||ADMIN_PW;wcfg()"></div><div class="pan"><h3>Admins</h3>';
+  ADMINS.forEach(function(p){h+='<div class="li"><span>'+esc(aname(p)?aname(p)+' · '+p:p)+'</span><span class="sub" style="flex:none">högsta admin</span></div>'});
+  c.admins.forEach(function(p){h+='<div class="li"><span>'+esc(aname(p)?aname(p)+' · '+p:p)+(p===ME?' (du)':'')+'</span>'+(p===ME?'':'<button class="x" data-p="'+p+'" onclick="delA(this.dataset.p)" aria-label="Ta bort admin">×</button>')+'</div>'});
+  return h+'<div class="add"><input type="text" id="nn" placeholder="Namn"><input type="tel" id="na" placeholder="Nytt admin-nummer" onkeydown="if(event.key===\'Enter\')addA()"><button class="btn" onclick="addA()">Lägg till</button></div></div>';
+}
+function cyc(el){
+  var d=el.dataset.d,k=el.dataset.k,id='m_'+d+'_'+k,m=S.abs[id],st=m?m.st:'',rp=!!S.abs['a_'+d+'_'+k],seq=rp?['','a','x']:['','x','a'],nx=seq[(seq.indexOf(st)+1)%3];
+  if(nx)wabs(id,{kind:'m',st:nx,date:d,kid:k,by:ME});else dabs(id);
+}
+function markAll(){
+  allKids().filter(function(o){return GSEL===''||(GSEL==='-'?!gname(o.k.g):o.k.g===GSEL)}).forEach(function(o){
+    var id='m_'+DSEL+'_'+o.k.id;if(S.abs[id]||S.abs['a_'+DSEL+'_'+o.k.id])return;
+    var ob={kind:'m',st:S.abs['a_'+DSEL+'_'+o.k.id]?'a':'x',date:DSEL,kid:o.k.id,by:ME};S.abs[id]=ob;if(CLOUD)fs.collection('np_abs').doc(id).set(ob)});
+  lsave();draw();
+}
+function pick(el){
+  var d=el.dataset.d,k=el.dataset.k,t=el.dataset.t,o=t==='a'?'c':'a',id=t+'_'+d+'_'+k,oid=o+'_'+d+'_'+k;
+  if(S.abs[id]){delete S.abs[id];if(CLOUD)fs.collection('np_abs').doc(id).delete()}
+  else{if(S.abs[oid]){delete S.abs[oid];if(CLOUD)fs.collection('np_abs').doc(oid).delete()}
+    var ob={kind:t,date:d,kid:k,by:ME};S.abs[id]=ob;if(CLOUD)fs.collection('np_abs').doc(id).set(ob)}
+  lsave();draw();
+}
+function setP(el){var d=el.dataset.d,k=el.dataset.k,s=el.dataset.s,id='m_'+d+'_'+k,m=S.abs[id];if(m&&m.st===s)dabs(id);else wabs(id,{kind:'m',st:s,date:d,kid:k,by:ME})}
+function regLink(){return location.origin+location.pathname+'?registrera'}
+function regBox(){var l=regLink(),m=encodeURIComponent('Registrera ditt barn här / ኣብዚ ቆልዓኹም ኣመዝግቡ: '+l);
+  return'<div class="pan"><h3>Registreringslänk</h3><div class="sub">Skicka länken till föräldrarna, så registrerar de sig själva.</div><input type="text" id="rl" value="'+esc(l)+'" readonly onclick="this.select()" style="margin-top:8px"><div class="add"><button class="btn" onclick="copyL()">Kopiera länk</button><a class="btn g" target="_blank" rel="noopener" href="https://wa.me/?text='+m+'">Skicka via WhatsApp</a></div></div>'}
+function copyL(){var i=$('rl');i.select();try{navigator.clipboard.writeText(i.value)}catch(e){try{document.execCommand('copy')}catch(e2){}}}
+function togD(el){var d=+el.dataset.d,i=S.cfg.days.indexOf(d);if(i>-1)S.cfg.days.splice(i,1);else S.cfg.days.push(d);wcfg()}
+function addA(){var p=norm($('na').value),n=$('nn').value.trim();if(p.length<6||isAdmin(p))return;S.cfg.admins.push(p);if(n){S.cfg.an=S.cfg.an||{};S.cfg.an[p]=n}wcfg()}
+function delA(p){ask('Ta bort admin '+p+'?',function(){S.cfg.admins=S.cfg.admins.filter(function(x){return x!==p});wcfg()})}
+draw();
+</script>
+</body>
+</html>
